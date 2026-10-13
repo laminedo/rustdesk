@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Remote">
+  <meta name="theme-color" content="#000000">
+  <title>Remote</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Sign in -->
+  <main id="login" class="screen login">
+    <div class="login-card">
+      <img class="app-icon" src="icon.svg" alt="">
+      <h1>Remote</h1>
+      <p class="subtitle">Connect to <strong id="host-name">your computer</strong></p>
+      <form id="login-form" autocomplete="on">
+        <input type="text" name="username" autocomplete="username" value="remote" hidden>
+        <div class="field">
+          <input id="password" type="password" placeholder="Password" autocomplete="current-password" required>
+        </div>
+        <p id="login-error" class="error" role="alert"></p>
+        <button class="btn-primary" type="submit" id="login-btn">
+          <span>Connect</span>
+        </button>
+      </form>
+      <p class="footnote">Tip: tap <svg class="inline-ico" viewBox="0 0 24 24"><path d="M12 3v12M7 8l5-5 5 5M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg> then “Add to Home Screen” to use Remote like an app.</p>
+    </div>
+  </main>
+
+  <!-- Remote session -->
+  <main id="session" class="screen session" hidden>
+    <div id="viewport" class="viewport">
+      <div id="stage" class="stage">
+        <canvas id="canvas"></canvas>
+        <div id="cursor" class="cursor" hidden></div>
+      </div>
+    </div>
+
+    <div id="status" class="status glass">
+      <span class="dot"></span><span id="status-text">Connecting…</span>
+    </div>
+
+    <div id="keys-bar" class="keys-bar glass" hidden>
+      <button data-mod="ctrl">ctrl</button>
+      <button data-mod="alt">alt</button>
+      <button data-mod="meta">⌘ / ⊞</button>
+      <button data-mod="shift">⇧</button>
+      <span class="sep"></span>
+      <button data-key="Escape">esc</button>
+      <button data-key="Tab">tab</button>
+      <button data-key="ArrowLeft">←</button>
+      <button data-key="ArrowUp">↑</button>
+      <button data-key="ArrowDown">↓</button>
+      <button data-key="ArrowRight">→</button>
+      <button data-key="Delete">del</button>
+      <button data-key="Home">home</button>
+      <button data-key="End">end</button>
+      <span class="sep"></span>
+      <button data-key="F1">F1</button><button data-key="F2">F2</button><button data-key="F3">F3</button>
+      <button data-key="F4">F4</button><button data-key="F5">F5</button><button data-key="F11">F11</button>
+    </div>
+
+    <nav id="toolbar" class="toolbar glass">
+      <button id="btn-keyboard" aria-label="Keyboard">
+        <svg viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M6 10h.01M9.5 10h.01M13 10h.01M16.5 10h.01M8 14h8"/></svg>
+      </button>
+      <button id="btn-keys" aria-label="Special keys">
+        <svg viewBox="0 0 24 24"><path d="M9 6H6a3 3 0 1 0 3 3V6Zm0 0v12m0-12h6m-6 12H6a3 3 0 1 1 3-3v3Zm0 0h6m0-12h3a3 3 0 1 1-3 3V6Zm0 12h3a3 3 0 1 0-3-3v3Zm0-9H9v6h6V9Z"/></svg>
+      </button>
+      <button id="btn-mode" aria-label="Input mode">
+        <svg id="ico-trackpad" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 15h18M12 15v5"/></svg>
+        <svg id="ico-touch" viewBox="0 0 24 24" hidden><path d="M9 11V5.5a1.5 1.5 0 0 1 3 0V11m0-1.5a1.5 1.5 0 0 1 3 0V11m0-.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-.6a6 6 0 0 1-4.6-2.2L4.6 16a1.5 1.5 0 0 1 2.3-1.9L9 16"/></svg>
+      </button>
+      <button id="btn-settings" aria-label="Settings">
+        <svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>
+      </button>
+      <button id="btn-hide" aria-label="Hide toolbar">
+        <svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+    </nav>
+    <button id="btn-show" class="show-toolbar glass" aria-label="Show toolbar" hidden>
+      <svg viewBox="0 0 24 24"><path d="m6 15 6-6 6 6"/></svg>
+    </button>
+
+    <textarea id="kbd" class="kbd-input" autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false" aria-hidden="true"></textarea>
+
+    <div id="toast" class="toast glass" hidden></div>
+  </main>
+
+  <!-- Settings sheet -->
+  <div id="sheet-backdrop" class="sheet-backdrop" hidden></div>
+  <section id="sheet" class="sheet" aria-hidden="true">
+    <div class="grabber"></div>
+    <header class="sheet-header">
+      <h2>Settings</h2>
+      <button id="sheet-done" class="link-btn">Done</button>
+    </header>
+
+    <h3 class="group-title">Picture</h3>
+    <div class="group">
+      <div class="row">
+        <span>Quality</span>
+        <div class="segmented" id="seg-quality">
+          <button data-value="low">Low</button>
+          <button data-value="medium">Medium</button>
+          <button data-value="high">High</button>
+        </div>
+      </div>
+      <div class="row" id="row-monitor">
+        <span>Display</span>
+        <div class="segmented" id="seg-monitor"></div>
+      </div>
+      <div class="row">
+        <span>Show cursor</span>
+        <label class="switch"><input type="checkbox" id="opt-cursor" checked><span></span></label>
+      </div>
+    </div>
+
+    <h3 class="group-title">Touch</h3>
+    <div class="group">
+      <div class="row">
+        <span>Mode</span>
+        <div class="segmented" id="seg-mode">
+          <button data-value="trackpad">Trackpad</button>
+          <button data-value="touch">Touch</button>
+        </div>
+      </div>
+      <div class="row">
+        <span>Pointer speed</span>
+        <input type="range" id="opt-speed" min="0.5" max="3" step="0.1" value="1.4">
+      </div>
+    </div>
+    <p class="group-footer" id="mode-help"></p>
+
+    <div class="group">
+      <button id="btn-disconnect" class="row destructive">Disconnect</button>
+    </div>
+  </section>
+
+  <script src="app.js"></script>
+</body>
+</html>
